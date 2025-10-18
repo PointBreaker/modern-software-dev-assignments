@@ -1,13 +1,22 @@
 import os
 from dotenv import load_dotenv
 from ollama import chat
+from loguru import logger
 
 load_dotenv()
 
 NUM_RUNS_TIMES = 5
 
-# TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+# DONE: Fill this in!
+YOUR_SYSTEM_PROMPT = """
+Your task: Reverse strings character by character.
+
+<example>
+- "abcdefg" -> "gfedcba"
+- "http" -> "ptth"
+- "status" -> "sutats"
+</example>
+"""
 
 USER_PROMPT = """
 Reverse the order of letters in the following word. Only output the reversed word, no other text:
@@ -33,6 +42,7 @@ def test_your_prompt(system_prompt: str) -> bool:
             ],
             options={"temperature": 0.5},
         )
+        logger.info(f"origin output from the model is {response.message.content}")
         output_text = response.message.content.strip()
         if output_text.strip() == EXPECTED_OUTPUT.strip():
             print("SUCCESS")
