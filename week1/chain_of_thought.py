@@ -2,13 +2,17 @@ import os
 import re
 from dotenv import load_dotenv
 from ollama import chat
+from loguru import logger
 
 load_dotenv()
 
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a mathematician.
+For the following problem, break it down into steps and solve it step by step.
+"""
 
 
 USER_PROMPT = """
@@ -56,7 +60,9 @@ def test_your_prompt(system_prompt: str) -> bool:
             options={"temperature": 0.3},
         )
         output_text = response.message.content
+        logger.info(f"output text is\n {output_text}")
         final_answer = extract_final_answer(output_text)
+        logger.info(f"final answer is {final_answer}")
         if final_answer.strip() == EXPECTED_OUTPUT.strip():
             print("SUCCESS")
             return True

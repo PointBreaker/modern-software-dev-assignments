@@ -41,6 +41,7 @@ def test_your_prompt(system_prompt: str) -> bool:
                 {"role": "user", "content": USER_PROMPT},
             ],
             options={"temperature": 0.5},
+            think=False,
         )
         logger.info(f"origin output from the model is {response.message.content}")
         output_text = response.message.content.strip()
