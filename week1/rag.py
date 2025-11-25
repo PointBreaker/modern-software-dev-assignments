@@ -2,6 +2,7 @@ import os
 import re
 from typing import List, Callable
 from dotenv import load_dotenv
+from loguru import logger
 from ollama import chat
 
 load_dotenv()
@@ -37,7 +38,9 @@ QUESTION = (
 
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a helpful assistant.
+"""
 
 
 # For this simple example
@@ -56,7 +59,7 @@ def YOUR_CONTEXT_PROVIDER(corpus: List[str]) -> List[str]:
 
     For example, return [] to simulate missing context, or [corpus[0]] to include the API docs.
     """
-    return []
+    return [corpus[0]]
 
 
 def make_user_prompt(question: str, context_docs: List[str]) -> str:
@@ -93,7 +96,6 @@ def test_your_prompt(system_prompt: str, context_provider: Callable[[List[str]],
     """Run up to NUM_RUNS_TIMES and return True if any output matches EXPECTED_OUTPUT."""
     context_docs = context_provider(CORPUS)
     user_prompt = make_user_prompt(QUESTION, context_docs)
-
     for idx in range(NUM_RUNS_TIMES):
         print(f"Running test {idx + 1} of {NUM_RUNS_TIMES}")
         response = chat(
@@ -106,6 +108,11 @@ def test_your_prompt(system_prompt: str, context_provider: Callable[[List[str]],
         )
         output_text = response.message.content
         code = extract_code_block(output_text)
+        logger.info(f"context docs: {context_docs}\n")
+        logger.info(f"user prompt: {user_prompt}\n")
+        logger.info(f"output text: {output_text}\n")
+        logger.info(f"generated code: {code}\n")
+        
         missing = [s for s in REQUIRED_SNIPPETS if s not in code]
         if not missing:
             print(output_text)
@@ -121,3 +128,4 @@ def test_your_prompt(system_prompt: str, context_provider: Callable[[List[str]],
 
 if __name__ == "__main__":
     test_your_prompt(YOUR_SYSTEM_PROMPT, YOUR_CONTEXT_PROVIDER)
+    # print(CORPUS)
