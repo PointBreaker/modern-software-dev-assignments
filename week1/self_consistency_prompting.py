@@ -2,6 +2,7 @@ import os
 import re
 from collections import Counter
 from dotenv import load_dotenv
+from loguru import logger
 from ollama import chat
 
 load_dotenv()
@@ -9,7 +10,9 @@ load_dotenv()
 NUM_RUNS_TIMES = 5
 
 # TODO: Fill this in! Try to get as close to 100% correctness across all runs as possible.
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+let's solve math problems step by step.
+"""
 
 USER_PROMPT = """
 Solve this problem, then give the final answer on the last line as "Answer: <number>".
@@ -56,6 +59,7 @@ def test_your_prompt(system_prompt: str) -> bool:
             options={"temperature": 1},
         )
         output_text = response.message.content
+        logger.info(f"output text is\n {output_text}")
         final_answer = extract_final_answer(output_text)
         print(f"Run {idx + 1} answer: {final_answer}")
         answers.append(final_answer.strip())
