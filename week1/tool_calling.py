@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Callable
 
 from dotenv import load_dotenv
 from ollama import chat
-
+from loguru import logger
 load_dotenv()
 
 NUM_RUNS_TIMES = 3
@@ -70,7 +70,19 @@ TOOL_REGISTRY: Dict[str, Callable[..., str]] = {
 # ==========================
 
 # TODO: Fill this in!
-YOUR_SYSTEM_PROMPT = ""
+YOUR_SYSTEM_PROMPT = """
+You are a helpful assistant. When asked to call a tool, please return a JSON object with the tool name and arguments:
+{
+    "tool": "tool_name",
+    "args": {
+        "arg1": "value1",
+        "arg2": "value2",
+        ...
+    }
+},
+
+You're required to call every tool with their expected arguments, you can first call output_every_func_return_type to get the list of functions and their return types.
+"""
 
 
 def resolve_path(p: str) -> str:
