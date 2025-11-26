@@ -43,14 +43,30 @@
             body: JSON.stringify({ text, save_note: save }),
           });
           if (!res.ok) throw new Error('Request failed');
-          const data = await res.json();
-          if (!data.items || data.items.length === 0) {
-            itemsEl.innerHTML = '<p class="muted">No action items found.</p>';
-            return;
+          const response = await res.json();
+
+          // Handle new response format
+          if (response.success && response.data) {
+            const data = response.data;
+            if (!data.items || data.items.length === 0) {
+              itemsEl.innerHTML = '<p class="muted">No action items found.</p>';
+              return;
+            }
+            itemsEl.innerHTML = data.items.map(it => (
+              `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${it.text}</span></div>`
+            )).join('');
+          } else if (response.items) {
+            // Handle old response format (backward compatibility)
+            if (!response.items || response.items.length === 0) {
+              itemsEl.innerHTML = '<p class="muted">No action items found.</p>';
+              return;
+            }
+            itemsEl.innerHTML = response.items.map(it => (
+              `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${it.text}</span></div>`
+            )).join('');
+          } else {
+            itemsEl.innerHTML = '<p class="muted">Unexpected response format.</p>';
           }
-          itemsEl.innerHTML = data.items.map(it => (
-            `<div class="item"><input type="checkbox" data-id="${it.id}" /> <span>${it.text}</span></div>`
-          )).join('');
           itemsEl.querySelectorAll('input[type="checkbox"]').forEach(cb => {
             cb.addEventListener('change', async (e) => {
               const id = e.target.getAttribute('data-id');

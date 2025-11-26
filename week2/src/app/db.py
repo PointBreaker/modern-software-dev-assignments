@@ -114,3 +114,15 @@ def mark_action_item_done(action_item_id: int, done: bool) -> None:
         connection.commit()
 
 
+def delete_action_item(action_item_id: int) -> bool:
+    """删除action item"""
+    with get_connection() as connection:
+        cursor = connection.cursor()
+        cursor.execute(
+            "DELETE FROM action_items WHERE id = ?",
+            (action_item_id,)
+        )
+        connection.commit()
+        return cursor.rowcount > 0
+
+

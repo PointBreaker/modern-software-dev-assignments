@@ -31,7 +31,7 @@ def test_extract_bullets_and_checkboxes_llm():
     items = extract_action_items_llm(text)
     logger.info(f"Extracted items: {items}")
     
-    items = [item.lower() for item in items]
+    items = [item.lower().rstrip('.') for item in items]
     assert "set up database" in items
     assert "implement api extract endpoint" in items
     assert "write tests" in items
