@@ -7,7 +7,7 @@ import time
 from fastapi import APIRouter, HTTPException
 
 from .. import db
-from ..services.extract import extract_action_items
+from ..services.extract import extract_action_items, extract_action_items_llm
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/action-items", tags=["action-items"])
 
 @router.post("/extract")
 def extract(payload: Dict[str, Any]) -> Dict[str, Any]:
-    """从文本中提取待办事项"""
+    """从文本中提取待办事项（基于规则）"""
     start_time = time.time()
     try:
         text = str(payload.get("text", "")).strip()
@@ -54,6 +54,49 @@ def extract(payload: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Error extracting action items: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to extract action items")
+
+
+@router.post("/extract-llm")
+def extract_with_llm(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """使用LLM从文本中提取待办事项"""
+    start_time = time.time()
+    try:
+        text = str(payload.get("text", "")).strip()
+        if not text:
+            raise HTTPException(status_code=400, detail="text is required")
+
+        note_id: Optional[int] = None
+        if payload.get("save_note"):
+            note_id = db.insert_note(text)
+            logger.info(f"Saved note with id: {note_id}")
+
+        # 使用LLM提取action items
+        logger.info("Starting LLM extraction...")
+        items = extract_action_items_llm(text)
+
+        # 批量插入数据库
+        if items:
+            ids = db.insert_action_items(items, note_id=note_id)
+            logger.info(f"Extracted and saved {len(items)} action items using LLM")
+        else:
+            ids = []
+            logger.info("No action items found in text using LLM")
+
+        duration = time.time() - start_time
+        return {
+            "success": True,
+            "data": {
+                "note_id": note_id,
+                "items": [{"id": i, "text": t} for i, t in zip(ids, items)],
+                "extraction_method": "llm",
+                "processing_time_ms": round(duration * 1000, 2)
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extracting action items with LLM: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to extract action items with LLM")
 
 
 @router.get("")
