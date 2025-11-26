@@ -7,6 +7,7 @@ import json
 from typing import Any
 from ollama import chat
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -64,6 +65,27 @@ def extract_action_items(text: str) -> List[str]:
         seen.add(lowered)
         unique.append(item)
     return unique
+
+class ActionItems(BaseModel):
+    items: List[str]
+  
+def extract_action_items_llm(text: str) -> List[str]:
+    response = chat(
+        messages=[
+        {
+            'role': 'system',
+            'content': 'You are a action item extractor, you will extract action items from the text, you will only return text with meaningful punctuation(,.!? etc.)',
+        },
+        {
+            'role': 'user',
+            'content': 'Extract action items from this text: ' + text,
+        }
+        ],
+        model='llama3.1:8b',
+        format=ActionItems.model_json_schema(),
+    )
+    res = ActionItems.model_validate_json(response.message.content)
+    return res.items
 
 
 def _looks_imperative(sentence: str) -> bool:
